@@ -10,5 +10,53 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-      - name: awesome-lint
+      - name: manti
         run: ./.github/workflows/repo_linter.sh
+
+using UnityEngine;
+
+[RequireComponent(typeof(CharacterController))]
+public class PlayerMovement : MonoBehaviour
+{
+    public float speed = 5f;
+    public float sprintSpeed = 8f;
+    public float gravity = -20f;
+    public float rotationSpeed = 12f;
+
+    private CharacterController controller;
+    private Vector3 velocity;
+
+    void Start()
+    {
+        controller = GetComponent<CharacterController>();
+    }
+
+    void Update()
+    {
+        float x = Input.GetAxis("Horizontal");
+        float z = Input.GetAxis("Vertical");
+
+        Vector3 direction = new Vector3(x, 0, z);
+        direction = Vector3.ClampMagnitude(direction, 1f);
+
+        if (direction.magnitude > 0.1f)
+        {
+            transform.rotation = Quaternion.Slerp(
+                transform.rotation,
+                Quaternion.LookRotation(direction),
+                rotationSpeed * Time.deltaTime
+            );
+        }
+
+        float currentSpeed = Input.GetKey(KeyCode.LeftShift)
+            ? sprintSpeed : speed;
+
+        controller.Move(direction * currentSpeed * Time.deltaTime);
+
+        if (controller.isGrounded && velocity.y < 0)
+            velocity.y = -2f;
+
+        velocity.y += gravity * Time.deltaTime;
+        controller.Move(velocity * Time.deltaTime);
+    }
+}
